@@ -1,0 +1,824 @@
+﻿﻿﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printer - HackMyVM - Bericht</title> <!-- Titel angepasst -->
+    <link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="../../horizontale-navbar.css"> <!-- Pfad ggf. anpassen -->
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
+</head>
+ <body>
+ <div class="nav-wrapper">
+    <div class="hamburger-nav-wrapper">
+        <input type="checkbox" id="hamburger-toggle">
+        <label id="hamburger-button" for="hamburger-toggle" aria-label="Menü öffnen">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </label>
+
+        <nav class="navbar" id="main-nav">
+            <a href="../../aboutme.html">Über mich</a> <!-- Pfad ggf. anpassen -->
+            <a href="../../index.html">HackMyVM</a> <!-- Pfad ggf. anpassen -->
+            <a href="../../vulnyx.html">Vulnyx</a> <!-- Pfad ggf. anpassen -->
+            <a href="../../vulnhub.html">Vulnhub</a> <!-- Pfad ggf. anpassen -->
+        </nav>
+  </div></div>
+    <div class="header-bg">
+        <!-- Titel und Schwierigkeitsgrad angepasst -->
+        <h1>Printer - HackMyVM - Level: Hard - Bericht</h1>
+        <div class="level-container">
+            <!-- Klasse für Hard hinzugefügt -->
+            <h2 class="level-hard">Hard</h2>
+            <div class="circle">
+                <!-- Farben werden durch CSS für .level-hard gesteuert -->
+                <div class="segment segment-1"></div>
+                <div class="segment segment-2"></div>
+                <div class="segment segment-3"></div>
+                <div class="inner"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <section class="tools-used">
+            <h2>Verwendete Tools</h2>
+            <div class="tools-grid">
+                <!-- Liste der verwendeten Tools basierend auf dem Text -->
+                <div class="tool-item">arp-scan</div>
+                <div class="tool-item">nmap</div>
+                <div class="tool-item">gobuster</div>
+                <div class="tool-item">curl</div>
+                <div class="tool-item">showmount</div>
+                <div class="tool-item">mkdir</div>
+                <div class="tool-item">mount</div>
+                <div class="tool-item">useradd</div>
+                <div class="tool-item">groupmod</div>
+                <div class="tool-item">su</div>
+                <div class="tool-item">id</div>
+                <div class="tool-item">cat</div>
+                <div class="tool-item">echo</div>
+                <div class="tool-item">ssh</div>
+                <div class="tool-item">find</div>
+                <div class="tool-item">ls</div>
+                <div class="tool-item">sudo</div>
+                <div class="tool-item">ln</div>
+                <div class="tool-item">logger</div>
+                <div class="tool-item">python3</div>
+                <div class="tool-item">wget</div>
+                <div class="tool-item">unzip</div>
+                <div class="tool-item">vi</div>
+                <div class="tool-item">chmod</div>
+            </div>
+        </section>
+
+        <section class="toc">
+            <h2>Inhaltsverzeichnis</h2>
+            <ul>
+                <!-- Inhaltsverzeichnis angepasst -->
+                <li><a href="#reconnaissance">Reconnaissance</a></li>
+                <li><a href="#web-enumeration">Web Enumeration (Fehlversuche)</a></li>
+                <li><a href="#nfs-enumeration">NFS Enumeration & Mount</a></li>
+                <li><a href="#initial-access">Initial Access (POC)</a></li>
+                <li><a href="#privilege-escalation">Privilege Escalation</a></li>
+                <li><a href="#flags">Flags</a></li>
+            </ul>
+        </section>
+
+        <section id="reconnaissance">
+            <h2>Reconnaissance</h2>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">arp-scan -l</span></div>
+                    <pre>
+<span class="command">192.168.2.125	08:00:27:7b:ed:7b	PCS Systemtechnik GmbH</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Der Befehl `arp-scan -l` wird verwendet, um das lokale Netzwerk (LAN) nach aktiven Hosts zu durchsuchen. Er sendet ARP-Anfragen ("Wer hat IP X?") an alle möglichen IP-Adressen im lokalen Subnetz und listet die antwortenden Hosts mit ihrer IP-Adresse, MAC-Adresse und dem Hersteller der Netzwerkkarte (basierend auf den ersten Bytes der MAC-Adresse, OUI - Organizationally Unique Identifier) auf.
+                In diesem Fall wurde ein Host mit der IP-Adresse `192.168.2.125` gefunden. Die MAC-Adresse `08:00:27:7b:ed:7b` gehört laut `arp-scan` zu "PCS Systemtechnik GmbH", was oft ein Hinweis auf eine VirtualBox-VM ist (Oracle/VirtualBox verwendet diesen OUI-Bereich).
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Dies ist der erste Schritt, um das Zielsystem im Netzwerk zu identifizieren. Die IP-Adresse `192.168.2.125` ist nun bekannt und kann für weitere Scans verwendet werden. Der Hinweis auf VirtualBox ist nützlich, aber für den weiteren Pentest meist nicht direkt relevant.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Die gefundene IP-Adresse `192.168.2.125` als Ziel für den nächsten Schritt, den Portscan mit Nmap, verwenden.<br>
+                **Empfehlung (Admin):** ARP-Scans sind im lokalen Netzwerk schwer zu verhindern. Wichtig ist, nur notwendige Systeme im Netzwerk zu betreiben und diese abzusichern. Netzwerksegmentierung kann die Reichweite solcher Scans einschränken. Sicherstellen, dass keine unerwünschten Geräte im Netzwerk aktiv sind.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">nmap -sS -sC -sV -T5 -A 192.168.2.125 -p-</span></div>
+                    <pre>
+Starting Nmap 7.93 ( https://nmap.org ) at 2023-04-09 02:01 CEST
+Nmap scan report for printer (<span class="command">192.168.2.125</span>)
+Host is up (0.00016s latency).
+Not shown: 65528 closed tcp ports (reset)
+PORT      STATE SERVICE  VERSION
+<span class="command">22/tcp    open  ssh      OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)</span>
+| ssh-hostkey:
+|   3072 1896ad8971037f6c8ba1d283ca6f0e56 (RSA)
+|   256 a41fbf9b2dccf682781c72bc319f7dfb (ECDSA)
+|_  256 6af6fcffe8b862577c684d6ae3f449ce (ED25519)
+<span class="command">111/tcp   open  rpcbind  2-4 (RPC #100000)</span>
+| rpcinfo:
+|   program version    port/proto  service
+|   100000  2,3,4        111/tcp   rpcbind
+|   100000  2,3,4        111/udp   rpcbind
+|   100000  3,4          111/tcp6  rpcbind
+|   100000  3,4          111/udp6  rpcbind
+|   100003  3           2049/udp   nfs
+|   100003  3           2049/udp6  nfs
+|   100003  3,4         <span class="command">2049/tcp   nfs</span>
+|   100003  3,4         2049/tcp6  nfs
+|   100005  1,2,3      <span class="command">37529/tcp   mountd</span>
+|   100005  1,2,3      39901/udp6  mountd
+|   100005  1,2,3      42235/udp   mountd
+|   100005  1,2,3      <span class="command">53707/tcp6  mountd</span>
+|   100021  1,3,4      <span class="command">33927/tcp   nlockmgr</span>
+|   100021  1,3,4      42517/tcp6  nlockmgr
+|   100021  1,3,4      46460/udp6  nlockmgr
+|   100021  1,3,4      47214/udp   nlockmgr
+|   100227  3           <span class="command">2049/tcp   nfs_acl</span>
+|   100227  3           2049/tcp6  nfs_acl
+|   100227  3           2049/udp   nfs_acl
+|_  100227  3           2049/udp6  nfs_acl
+<span class="command">2049/tcp  open  nfs_acl  3 (RPC #100227)</span>
+<span class="command">33927/tcp open  nlockmgr 1-4 (RPC #100021)</span>
+<span class="command">37529/tcp open  mountd   1-3 (RPC #100005)</span>
+<span class="command">42631/tcp open  mountd   1-3 (RPC #100005)</span>
+<span class="command">51355/tcp open  mountd   1-3 (RPC #100005)</span>
+MAC Address: <span class="command">08:00:27:7B:ED:7B</span> (Oracle VirtualBox virtual NIC)
+Device type: general purpose
+Running: <span class="command">Linux 4.X|5.X</span>
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5
+OS details: <span class="command">Linux 4.15 - 5.6</span>
+Network Distance: 1 hop
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE
+HOP RTT     ADDRESS
+1   0.16 ms printer (<span class="command">192.168.2.125</span>)
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Ein umfassender Nmap-Scan wird auf das Ziel `192.168.2.125` durchgeführt.
+                *   `-sS`: SYN-Scan (Stealth Scan), Standard und oft effizient.
+                *   `-sC`: Führt Standard-NSE-Skripte (Nmap Scripting Engine) aus, um zusätzliche Informationen zu sammeln.
+                *   `-sV`: Versucht, die Versionen der laufenden Dienste zu ermitteln.
+                *   `-T5`: Timing-Template "insane" (sehr aggressiv, schnell, kann aber unzuverlässig sein oder entdeckt werden).
+                *   `-A`: Aktiviert OS-Erkennung, Versionserkennung, Skript-Scanning und Traceroute.
+                *   `-p-`: Scannt alle 65535 TCP-Ports.
+                **Ergebnisse:**
+                *   Offene Ports: 22 (SSH - OpenSSH 8.4p1), 111 (rpcbind), 2049 (NFS), und mehrere hohe Ports (33927, 37529, 42631, 51355), die ebenfalls RPC-Dienste (nlockmgr, mountd) bereitstellen.
+                *   Das `rpcinfo`-Skript listet detailliert die über RPC verfügbaren Dienste auf, insbesondere NFS (Network File System) und die zugehörigen Dienste `mountd` (zum Mounten von Dateisystemen) und `nlockmgr` (für Dateisperren).
+                *   Die OS-Erkennung deutet auf ein Linux-System mit Kernel 4.x oder 5.x hin.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Der Nmap-Scan liefert kritische Informationen. Die Präsenz von SSH (Port 22) ist ein potenzieller Login-Punkt. Die Kombination aus `rpcbind` (Port 111), `nfs` (Port 2049) und `mountd` (hohe Ports) ist ein starker Hinweis auf eine oder mehrere konfigurierte NFS-Freigaben. NFS ist oft ein interessanter Angriffsvektor, da falsch konfigurierte Freigaben Lese- oder sogar Schreibzugriff auf Teile des Server-Dateisystems ermöglichen können. Die hohen Ports für `mountd` und `nlockmgr` sind typisch für RPC-Dienste.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):**
+                1.  **NFS untersuchen:** Den `showmount`-Befehl verwenden, um die verfügbaren NFS-Freigaben aufzulisten (`showmount -e 192.168.2.125`).
+                2.  **NFS-Freigaben mounten:** Versuchen, die gefundenen Freigaben lokal zu mounten, um auf die Inhalte zuzugreifen. Berechtigungen prüfen (Lese-/Schreibzugriff).
+                3.  **SSH:** Nach potenziellen Benutzernamen oder Schwachstellen in der OpenSSH-Version suchen (obwohl 8.4p1 relativ aktuell ist). Ein späterer Brute-Force-Versuch ist möglich, wenn Anmeldeinformationen gefunden werden.
+                4.  **Webserver?** Auffällig ist, dass kein typischer Webserver-Port (80, 443) offen ist. Dies erklärt die späteren Fehlversuche mit `gobuster` und `curl`.<br>
+                **Empfehlung (Admin):**
+                1.  **NFS-Sicherheit prüfen:** Sicherstellen, dass NFS-Freigaben nur für die absolut notwendigen Hosts freigegeben sind (nicht `*` oder das gesamte Subnetz, wenn nicht erforderlich). Zugriffsrechte (read-only vs. read-write) restriktiv setzen. Die Optionen `root_squash` (Standard) oder `no_root_squash` bewusst konfigurieren (`root_squash` ist sicherer). NFSv4 mit Kerberos-Authentifizierung verwenden, falls möglich. Firewall-Regeln für NFS, rpcbind und die dynamischen RPC-Ports (mountd, nlockmgr) korrekt konfigurieren.
+                2.  **SSH absichern:** Starke Passwörter oder Schlüssel-Authentifizierung erzwingen. Zugriff auf SSH auf bestimmte IPs beschränken, wenn möglich. Fail2ban oder ähnliche Tools zum Schutz vor Brute-Force-Angriffen einsetzen.
+            </p>
+        </section>
+
+        <section id="web-enumeration">
+            <h2>Web Enumeration (Fehlversuche)</h2>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">gobuster dir -u http://192.168.2.125 -x txt,php,rar,zip,tar,pub,xls,docx,doc,sql,db,mdb,asp,aspx,accdb,bat,ps1,exe,sh,py,pl,gz,jpeg,jpg,png,html,phtml,xml,csv,dll,pdf,raw,rtf,xlsx,zip,kdbx -w "/usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt"  -b '403,404' -e -t 100 -n -k</span></div>
+                    <pre>
+<span class="password">Error: error on running gobuster: unable to connect to http://192.168.2.125:111/: Get "http://192.168.2.125:111/": read tcp 192.168.2.114:45352->192.168.2.125:111: read: connection reset by peer</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Der Befehl `gobuster dir` wird verwendet, um nach versteckten Verzeichnissen und Dateien auf einem Webserver zu suchen (Directory Brute-Forcing).
+                *   `-u http://192.168.2.125`: Die Ziel-URL. Da kein Port angegeben ist, wird Standard-Port 80 verwendet.
+                *   `-x ...`: Eine lange Liste von Dateiendungen, nach denen zusätzlich gesucht werden soll.
+                *   `-w ...`: Die Wortliste, die für die Verzeichnis-/Dateinamen verwendet wird.
+                *   `-b '403,404'`: HTTP-Statuscodes, die als "nicht gefunden" interpretiert und ausgeblendet werden sollen.
+                *   `-e`: Erweiterter Modus (zeigt die vollständige URL).
+                *   `-t 100`: Anzahl der gleichzeitigen Threads (sehr hoch).
+                *   `-n`: Keinen Fortschrittsbalken anzeigen.
+                *   `-k`: Unsichere SSL/TLS-Zertifikate ignorieren (hier nicht relevant, da HTTP).
+                **Ergebnis:** `gobuster` schlägt fehl mit der Meldung `unable to connect to http://192.168.2.125:111/`. Es scheint, als hätte `gobuster` fälschlicherweise versucht, sich mit Port 111 zu verbinden, obwohl Port 80 impliziert war. Die Meldung `connection reset by peer` auf Port 111 bestätigt, dass dieser Port zwar offen ist (wie Nmap zeigte), aber kein HTTP-Protokoll erwartet.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Der Versuch, einen Webserver auf Port 80 zu finden, schlug fehl. Nmap hatte bereits gezeigt, dass Port 80 nicht offen ist. Der Fehler von `gobuster`, der Port 111 erwähnt, ist merkwürdig. Möglicherweise gab es einen vorherigen Versuch oder eine Umleitung, die hier nicht sichtbar ist, oder `gobuster` hat Probleme bei der Zielverarbeitung. Der wichtigste Punkt ist: Auf dem Standard-HTTP-Port 80 läuft kein Webserver. Der Versuch, Port 111 (rpcbind) als Webserver anzusprechen, muss fehlschlagen.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Den Nmap-Scan überprüfen. Da Port 80 und 443 nicht offen sind, ist eine Web-Enumeration wahrscheinlich nicht der richtige Weg. Den Fokus auf die anderen offenen Dienste, insbesondere NFS, legen. Falls doch ein Webserver auf einem nicht-standardmäßigen Port vermutet wird, diesen explizit bei `gobuster` angeben (z.B. `-u http://192.168.2.125:8080`).<br>
+                **Empfehlung (Admin):** Sicherstellen, dass keine unnötigen Webserver laufen. Wenn ein Dienst wie `rpcbind` fälschlicherweise über HTTP angesprochen wird, sollte er die Verbindung korrekt zurückweisen, wie hier geschehen.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">curl -vI http://192.168.2.125:111</span></div>
+                    <pre>
+*   Trying <span class="command">192.168.2.125:111</span>...
+* Connected to 192.168.2.125 (192.168.2.125) port 111 (#0)
+> HEAD / HTTP/1.1
+> Host: 192.168.2.125:111
+> User-Agent: curl/7.88.1
+> Accept: */*
+>
+<span class="password">* Recv failure: Die Verbindung wurde vom Kommunikationspartner zurückgesetzt</span>
+* Closing connection 0
+<span class="password">curl: (56) Recv failure: Die Verbindung wurde vom Kommunikationspartner zurückgesetzt</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Hier wird versucht, mit `curl` eine HTTP-HEAD-Anfrage (`-I`) an Port 111 des Ziels zu senden. Der `-v`-Flag sorgt für eine detaillierte Ausgabe des Verbindungsaufbaus und der Kommunikation. `curl` verbindet sich erfolgreich auf TCP-Ebene mit Port 111, sendet die HTTP-HEAD-Anfrage, erhält aber dann einen Fehler (`Recv failure: Die Verbindung wurde vom Kommunikationspartner zurückgesetzt`).
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Dies bestätigt, dass auf Port 111 kein HTTP-Server läuft. Der `rpcbind`-Dienst, der auf diesem Port lauscht, versteht die HTTP-Anfrage nicht und bricht die Verbindung ab (`connection reset`). Dies untermauert die Ergebnisse des Nmap-Scans und erklärt, warum auch `gobuster` fehlschlug.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Die Untersuchung von Port 111 mit HTTP-Tools einstellen. Stattdessen RPC-spezifische Tools wie `rpcinfo` (wurde bereits von Nmap verwendet) oder Tools zur Interaktion mit NFS verwenden.<br>
+                **Empfehlung (Admin):** Keine zusätzlichen Maßnahmen erforderlich, da sich der Dienst erwartungsgemäß verhält, wenn er mit einem falschen Protokoll angesprochen wird.
+            </p>
+
+        </section>
+
+        <section id="nfs-enumeration">
+            <h2>NFS Enumeration & Mount</h2>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">showmount -e 192.168.2.125</span></div>
+                    <pre>
+Export list for 192.168.2.125:
+<span class="command">/home/lisa *</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Der Befehl `showmount -e <IP-Adresse>` fragt den `mountd`-Dienst auf dem Zielserver nach den exportierten NFS-Verzeichnissen (Exportliste). Das `-e` steht für "exports".
+                Die Ausgabe zeigt, dass das Verzeichnis `/home/lisa` auf dem Server `192.168.2.125` exportiert wird. Das Sternchen (`*`) bedeutet, dass die Freigabe für alle Hosts im Netzwerk (oder zumindest ohne spezifische IP-Beschränkung) zugänglich ist.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Das ist ein vielversprechender Fund! Eine NFS-Freigabe für ein Benutzer-Home-Verzeichnis (`/home/lisa`), die für alle (`*`) zugänglich ist, ist oft eine Quelle für Informationsgewinnung oder sogar einen direkten Zugriffspunkt. Wir können versuchen, diese Freigabe zu mounten, um den Inhalt zu sehen.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Die gefundene Freigabe `/home/lisa` im nächsten Schritt lokal mounten. Prüfen, mit welchen Berechtigungen (UID/GID) der Zugriff erfolgt.<br>
+                **Empfehlung (Admin):** NFS-Freigaben niemals mit `*` exportieren, es sei denn, es ist absolut unvermeidlich und das Netzwerk ist streng kontrolliert. Immer spezifische IP-Adressen oder Subnetze angeben. Die Notwendigkeit, ein Home-Verzeichnis per NFS zu exportieren, kritisch prüfen. Sicherstellen, dass `root_squash` aktiv ist, um zu verhindern, dass ein lokaler Root-Benutzer auf der Client-Seite als Root auf die Freigabe zugreift.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[/]
+└─# <span class="command">mkdir mount</span></div>
+                    <!-- Keine Ausgabe erwartet -->
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Auf der lokalen Angreifer-Maschine wird im Wurzelverzeichnis (`/`) ein neues Verzeichnis namens `mount` erstellt. Dieses Verzeichnis dient als lokaler Einhängepunkt (Mountpoint) für die NFS-Freigabe.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Standardmäßiger Vorbereitungsschritt für das Mounten eines externen Dateisystems.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Einen aussagekräftigeren Namen für den Mountpoint verwenden (z.B. `/mnt/printer_lisa`) kann bei mehreren Mounts die Übersichtlichkeit erhöhen.<br>
+                **Empfehlung (Admin):** Dies geschieht auf der Client-Seite und ist nicht direkt relevant für die Serversicherheit.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[/]
+└─# <span class="command">mount -t nfs 192.168.2.125:/home/lisa mount/</span></div>
+                    <!-- Keine Ausgabe bei Erfolg erwartet -->
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Der Befehl `mount` wird verwendet, um die NFS-Freigabe einzuhängen.
+                *   `-t nfs`: Gibt den Dateisystemtyp als NFS an.
+                *   `192.168.2.125:/home/lisa`: Die Quelle – IP-Adresse des NFS-Servers und der Pfad zur Freigabe.
+                *   `mount/`: Das Ziel – der lokale Mountpoint, der im vorherigen Schritt erstellt wurde.
+                Es gibt keine Ausgabe, was normalerweise bedeutet, dass der Mount-Vorgang erfolgreich war.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Die NFS-Freigabe `/home/lisa` vom Zielserver ist nun lokal unter `/mount` auf der Angreifer-Maschine verfügbar. Der Inhalt dieses Verzeichnisses kann jetzt untersucht werden. Der Zugriff erfolgt typischerweise mit den Rechten des lokalen Benutzers, der den Mount-Befehl ausführt (hier `root`), aber die effektiven Rechte auf die Dateien hängen von den UID/GID-Mappings und den NFS-Exportoptionen (`root_squash`) ab.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Sofort den Inhalt des `/mount`-Verzeichnisses untersuchen (`ls -la /mount`). Auf interessante Dateien achten (Konfigurationsdateien, Skripte, SSH-Schlüssel, Passwörter, `user.txt`). Die Berechtigungen und Eigentümer (UID/GID) der Dateien prüfen. Wenn Schreibzugriff besteht, könnte dies für Initial Access genutzt werden (z.B. durch Hinzufügen eines SSH-Keys zu `~/.ssh/authorized_keys`).<br>
+                **Empfehlung (Admin):** Wie bereits bei `showmount` erwähnt: NFS-Exporte und Berechtigungen restriktiv konfigurieren. Logging von NFS-Zugriffen kann helfen, unautorisierte Mount-Versuche zu erkennen.
+            </p>
+        </section>
+
+        <section id="initial-access">
+            <h2>Initial Access (POC)</h2>
+            <p class="analysis">
+                 **Analyse:** Die folgenden Schritte dienen dazu, auf der *lokalen* Angreifer-Maschine einen Benutzer `lisa` mit der spezifischen UID 1098 und GID 1098 zu erstellen. Dies geschieht, weil bei NFS-Zugriffen die Berechtigungen oft anhand der numerischen User ID (UID) und Group ID (GID) geprüft werden. Wenn auf der NFS-Freigabe Dateien dem Benutzer mit UID 1098 gehören, kann der lokale Pentester durch Erstellung eines Benutzers mit derselben UID versuchen, auf diese Dateien mit den entsprechenden Rechten zuzugreifen.
+            </p>
+             <p class="evaluation">
+                **Bewertung:** Dies ist eine clevere Technik, um potenzielle Berechtigungsprobleme beim NFS-Zugriff zu umgehen, insbesondere wenn `root_squash` aktiv ist (was den lokalen `root`-Benutzer auf der Freigabe zu einem unprivilegierten Benutzer wie `nobody` macht). Indem man lokal einen Benutzer mit passender UID/GID erstellt, kann man möglicherweise die Rechte des tatsächlichen Benutzers `lisa` auf dem Zielsystem "annehmen". Die UID/GID 1098 wurde vermutlich durch `ls -la` auf dem gemounteten Verzeichnis ermittelt (dieser Schritt fehlt im Log).
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[/mount]
+└─# <span class="command">useradd --uid 1098 lisa</span></div>
+                    <!-- Keine Ausgabe erwartet -->
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Erstellt auf der lokalen Maschine einen neuen Benutzer namens `lisa` und weist ihm explizit die User ID (UID) `1098` zu.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Notwendiger Schritt für das UID-Matching.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Sicherstellen, dass die UID 1098 nicht bereits auf dem lokalen System verwendet wird. Nach dem Test kann dieser Benutzer wieder entfernt werden (`userdel lisa`).<br>
+                **Empfehlung (Admin):** Lokale Benutzerverwaltung auf Clients ist nicht direkt vom Server beeinflussbar. Die Sicherheit liegt in den korrekten NFS-Exportoptionen.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[/mount]
+└─# <span class="command">groupmod --gid 1098 lisa</span></div>
+                    <!-- Keine Ausgabe erwartet -->
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Ändert die primäre Group ID (GID) der Gruppe `lisa` (die normalerweise bei `useradd` automatisch mit erstellt wird) auf die GID `1098`.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Stellt sicher, dass sowohl UID als auch GID mit dem Benutzer `lisa` auf dem Zielsystem übereinstimmen, um Berechtigungsprobleme zu minimieren.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Analog zu `useradd`.<br>
+                **Empfehlung (Admin):** Analog zu `useradd`.
+            </p>
+
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[/mount]
+└─# <span class="command">su lisa</span></div>
+                    <pre>
+$ id
+<span class="command">uid=1098(lisa) gid=1098(lisa) Gruppen=1098(lisa)</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Der Pentester wechselt auf der lokalen Maschine mit `su lisa` (substitute user) zum neu erstellten Benutzer `lisa`. Der Befehl `id` wird sofort ausgeführt, um zu bestätigen, dass der Benutzerwechsel erfolgreich war und die UID und GID korrekt auf `1098` gesetzt sind. Der Prompt ändert sich von `#` (root) zu `$` (normaler Benutzer).
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Der Pentester agiert nun lokal als Benutzer `lisa` mit UID/GID 1098. Dateizugriffe auf das gemountete Verzeichnis `/mount` (welches `/home/lisa` vom Zielserver repräsentiert) erfolgen nun mit diesen IDs, was potenziell Lese-/Schreibzugriff ermöglicht, der als `root` möglicherweise durch `root_squash` verweigert worden wäre.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Nun vom `/mount`-Verzeichnis aus agieren. Erneut `ls -la` ausführen, um zu sehen, ob sich die sichtbaren Berechtigungen geändert haben. Versuchen, Dateien zu lesen und zu schreiben.<br>
+                **Empfehlung (Admin):** Erneut: Korrekte NFS-Konfiguration ist der Schlüssel.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                     <!-- Prompt des lokalen Benutzers lisa -->
+                    <div class="prompt">$ <span class="command">cat user.txt</span></div>
+                    <pre>
+<span class="password">f590b7e83e4c8cd11d06849f9c1a8f6d</span>
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Als lokaler Benutzer `lisa` wird versucht, die Datei `user.txt` direkt im gemounteten Verzeichnis (implizit `/mount/user.txt`) zu lesen. Der Befehl ist erfolgreich und gibt den Inhalt der Flag aus.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Erfolg! Der Zugriff auf die User-Flag war über die gemountete NFS-Freigabe möglich, wahrscheinlich weil der lokale Benutzer `lisa` die passende UID/GID hatte. Dies ist der erste Flag und ein wichtiger Meilenstein. Es zeigt auch, dass der Benutzer `lisa` auf dem Zielsystem Lesezugriff auf diese Datei hat.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** User-Flag notieren. Weiter nach Möglichkeiten suchen, Schreibzugriff zu erlangen, um Persistenz oder Initial Access über SSH zu ermöglichen.<br>
+                **Empfehlung (Admin):** Benutzer-Flags (und sensible Daten generell) sollten nicht in unsicher exportierten NFS-Verzeichnissen liegen. Home-Verzeichnisse sollten restriktive Berechtigungen haben (typischerweise `700` oder `750`), auch innerhalb des Systems.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">$ <span class="command">echo "ssh-rsa AAA... root@cyber" > .ssh/authorized_keys</span></div>
+                    <!-- Angenommen, der Befehl wurde im /mount Verzeichnis ausgeführt und war erfolgreich -->
+                     <!-- Im Originaltext war der Key unvollständig, hier symbolisch -->
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Als lokaler Benutzer `lisa` wird versucht, den öffentlichen SSH-Schlüssel des Angreifers (`ssh-rsa AAA... root@cyber` - der Key ist im Originaltext nicht vollständig/korrekt dargestellt, daher symbolisch) in die Datei `.ssh/authorized_keys` innerhalb des gemounteten Verzeichnisses zu schreiben. Der Pfad wäre relativ zum aktuellen Verzeichnis (`/mount`), also `/mount/.ssh/authorized_keys`. Wenn diese Datei existiert und der SSH-Server auf dem Zielsystem entsprechend konfiguriert ist, erlaubt dies dem Angreifer, sich per SSH als Benutzer `lisa` ohne Passwort anzumelden, indem er den zugehörigen privaten Schlüssel verwendet.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Dies ist der entscheidende Schritt für den Initial Access über SSH. Wenn der lokale Benutzer `lisa` (mit UID/GID 1098) Schreibrechte im Verzeichnis `/mount/.ssh/` (also `/home/lisa/.ssh/` auf dem Server) hat, kann er seinen eigenen öffentlichen Schlüssel hinzufügen. Dies ist ein klassischer Weg, um über eine unsichere NFS-Freigabe einen persistenten SSH-Zugang zu erlangen. Das Fehlen einer Fehlermeldung deutet auf Erfolg hin.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Nach Ausführung dieses Befehls sofort versuchen, sich per SSH als `lisa@192.168.2.125` mit dem entsprechenden privaten Schlüssel (`/root/.ssh/id_rsa`) anzumelden. Sicherstellen, dass das `.ssh`-Verzeichnis die richtigen Berechtigungen hat (`700`) und die `authorized_keys`-Datei ebenfalls (`600`), obwohl `echo` dies nicht automatisch setzt.<br>
+                **Empfehlung (Admin):** Schreibzugriff auf Home-Verzeichnisse über NFS ist riskant. Wenn Schreibzugriff nötig ist, sicherstellen, dass die Berechtigungen für sensible Unterverzeichnisse wie `.ssh` korrekt sind und nicht von außen manipuliert werden können. SSH-Server-Konfiguration prüfen (`StrictModes yes` in `sshd_config` hilft, unsichere Berechtigungen für Home-Verzeichnisse und `.ssh`-Dateien abzulehnen).
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                     <!-- Zurück zur lokalen root-Shell -->
+                    <div class="prompt">┌──(root㉿cyber)-[/mount]
+└─# <span class="command">ssh lisa@printer.hmv -i /root/.ssh/id_rsa</span></div>
+                    <pre>
+The authenticity of host 'printer.hmv (192.168.2.125)' can't be established.
+ED25519 key fingerprint is SHA256:f2vhUNH1XbXWf25dlHW+1xbh5Vm1SITjBRCQG1gJEpo.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'printer.hmv' (ED25519) to the list of known hosts.
+Enter passphrase for key '/root/.ssh/id_rsa': <span class="password"><Passphrase eingegeben></span>
+Linux printer 5.10.0-20-amd64 #1 SMP Debian 5.10.158-2 (2022-12-13) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Jan  8 12:21:16 2023 from 192.168.0.29
+<span class="prompt">lisa@printer:~$</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Der Pentester (wieder als `root` auf der lokalen Maschine) versucht nun, sich per SSH mit dem Zielsystem zu verbinden.
+                *   `ssh lisa@printer.hmv`: Verbindungsversuch als Benutzer `lisa` zum Host `printer.hmv`. (Es wird angenommen, dass `printer.hmv` in der lokalen `/etc/hosts`-Datei auf `192.168.2.125` zeigt oder per DNS auflösbar ist).
+                *   `-i /root/.ssh/id_rsa`: Gibt den Pfad zum privaten SSH-Schlüssel an, der für die Authentifizierung verwendet werden soll. Dies ist der Schlüssel, dessen öffentlicher Teil zuvor in die `authorized_keys`-Datei geschrieben wurde.
+                Die Ausgabe zeigt:
+                *   Warnung zur Authentizität des Hosts (erstmalige Verbindung). Der Benutzer bestätigt mit `yes`.
+                *   Aufforderung zur Eingabe der Passphrase für den privaten Schlüssel `/root/.ssh/id_rsa`. Dies bedeutet, der private Schlüssel selbst ist passwortgeschützt.
+                *   Nach Eingabe der korrekten Passphrase wird die Verbindung hergestellt, das System-Banner wird angezeigt, und der Pentester erhält eine Shell-Prompt als `lisa@printer`.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Ausgezeichnet! Der Initial Access über SSH als Benutzer `lisa` war erfolgreich. Dies wurde durch die Ausnutzung der unsicheren NFS-Freigabe ermöglicht, um den eigenen öffentlichen SSH-Schlüssel zu platzieren. Der Pentester hat nun eine stabile, interaktive Shell auf dem Zielsystem als Benutzer `lisa`.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Die Shell ist etabliert. Nun beginnt die Phase der Privilege Escalation. Systemenumeration als Benutzer `lisa` durchführen: `sudo -l`, SUID/GUID-Dateien, Cronjobs, Kernel-Version, installierte Software, Home-Verzeichnis untersuchen, Netzwerkverbindungen prüfen.<br>
+                **Empfehlung (Admin):** Den unautorisierten SSH-Login untersuchen. Den Ursprung (NFS-Schwachstelle) identifizieren und beheben. NFS-Konfiguration härten. Überprüfen, welche Aktionen als Benutzer `lisa` durchgeführt wurden. Sicherstellen, dass SSH-Schlüssel (sowohl private als auch öffentliche) sicher gehandhabt werden. Private Schlüssel sollten immer mit einer starken Passphrase geschützt sein, wie hier der Fall.
+            </p>
+
+        </section>
+
+        <section id="privilege-escalation">
+            <h2>Privilege Escalation</h2>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">lisa@printer:~$ <span class="command">cat user.txt</span></div>
+                     <pre>
+<span class="password">f590b7e83e4c8cd11d06849f9c1a8f6d</span>
+                     </pre>
+                 </div>
+             </div>
+              <p class="analysis">
+                 **Analyse:** Der Pentester liest erneut die `user.txt`-Datei, diesmal direkt aus der SSH-Shell als Benutzer `lisa`.
+             </p>
+             <p class="evaluation">
+                 **Bewertung:** Bestätigt den Lesezugriff und den Inhalt der Flag aus der etablierten Shell.
+             </p>
+              <p class="recommendation">
+                 **Empfehlung (Pentester):** Bereits erledigt. Fokus auf Enumeration für PrivEsc.<br>
+                 **Empfehlung (Admin):** Keine neuen Erkenntnisse.
+             </p>
+
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">lisa@printer:~$ <span class="command">find / -type f -name  *.txt 2>/dev/null</span></div>
+                    <pre>
+/home/lisa/user.txt
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Der Befehl `find / -type f -name '*.txt' 2>/dev/null` sucht im gesamten Dateisystem (`/`) nach regulären Dateien (`-type f`), deren Name auf `.txt` endet (`-name '*.txt'`). Fehlermeldungen (z.B. wegen fehlender Leserechte für Verzeichnisse) werden mit `2>/dev/null` unterdrückt.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Standard-Enumerationsschritt, um potenziell interessante Textdateien zu finden. In diesem Fall wird nur die bereits bekannte `user.txt` gefunden. Dies schließt nicht aus, dass andere interessante Dateien existieren, die nicht auf `.txt` enden.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** Die Suche erweitern: Nach anderen Dateiendungen suchen (z.B. `.conf`, `.config`, `.sh`, `.py`, `.bak`, `.old`, `.password`, `.key`), nach Dateien mit bestimmten Namen (z.B. `*pass*`, `*secret*`, `*config*`), nach kürzlich geänderten Dateien oder Dateien mit bestimmten Berechtigungen (SUID/GUID). Tools wie `linpeas.sh` automatisieren viele dieser Suchen.<br>
+                **Empfehlung (Admin):** Sicherstellen, dass sensible Dateien korrekte Berechtigungen haben und nicht von unprivilegierten Benutzern gefunden oder gelesen werden können. Regelmäßige Systembereinigung durchführen, um alte oder unnötige Dateien zu entfernen.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">lisa@printer:~$ <span class="command">ls /home</span></div>
+                    <pre>
+lisa
+                    </pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:** Listet den Inhalt des Verzeichnisses `/home` auf.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Zeigt, dass `lisa` der einzige Benutzer mit einem Home-Verzeichnis unter `/home` ist. Andere Benutzer könnten existieren, aber ihre Home-Verzeichnisse liegen woanders oder sie haben keine.
+            </p>
+            <p class="recommendation">
+                **Empfehlung (Pentester):** `/etc/passwd` prüfen, um eine vollständige Liste der Systembenutzer zu erhalten.<br>
+                **Empfehlung (Admin):** Standard-Verzeichnisstruktur.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">lisa@printer:~$ <span class="command">sudo -l</span></div>
+                    <pre>
+[sudo] password for lisa: <span class="password"><Passwortversuch fehlgeschlagen/abgebrochen></span>
+<span class="password">sudo: a password is required</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Der Befehl `sudo -l` wird verwendet, um aufzulisten, welche Befehle der aktuelle Benutzer (`lisa`) mit `sudo` (also mit erhöhten Rechten, typischerweise als `root`) ausführen darf. Das System fragt nach dem Passwort des Benutzers `lisa`. Da der Pentester das Passwort nicht kennt (oder es im Berichtskontext nicht eingegeben/gefunden wurde), schlägt der Befehl fehl.
+            </p>
+             <p class="evaluation">
+                **Bewertung:** Der Benutzer `lisa` benötigt ein Passwort, um `sudo -l` auszuführen. Ohne das Passwort können wir nicht sehen, ob `lisa` irgendwelche `sudo`-Rechte hat. Dies ist ein häufiges Hindernis, wenn man über SSH-Keys eingestiegen ist. Jedoch gibt es im Text weiter unten einen Hinweis auf ein Passwort: `user:Lisa pass:1154p455!1`. Dieses Passwort sollte hier ausprobiert werden!
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Das gefundene Passwort `1154p455!1` für den Benutzer `lisa` bei der `sudo -l`-Abfrage erneut versuchen! Wenn `sudo -l` erfolgreich ist, die Ausgabe genau analysieren. Oft erlauben spezifische `sudo`-Regeln eine Rechteausweitung (z.B. Ausführung von Editoren, `find`, `cp`, `less` etc. als root). Wenn das Passwort nicht funktioniert oder keine nützlichen `sudo`-Rechte vorhanden sind, nach anderen PrivEsc-Vektoren suchen.<br>
+                **Empfehlung (Admin):** `sudo`-Rechte nach dem Prinzip der geringsten Rechte vergeben. Benutzern niemals erlauben, Shells oder Editoren uneingeschränkt als `root` auszuführen. Das Passwort `1154p455!1` ist relativ schwach und sollte geändert werden. Benutzer sollten sichere, einzigartige Passwörter verwenden. Überlegen, ob `sudo` für `lisa` überhaupt notwendig ist.
+            </p>
+
+            <p class="analysis">
+                **Analyse:** Im Berichtstext findet sich der Hinweis: "drucker pcl datei in pdf online convertiert, user:Lisa pass:1154p455!1". Dies deutet darauf hin, dass durch die Analyse einer Druckerdatei (PCL - Printer Command Language), möglicherweise durch Konvertierung in PDF, die Anmeldeinformationen für den Benutzer `lisa` extrahiert wurden.
+            </p>
+             <p class="evaluation">
+                **Bewertung:** Dies ist ein kritischer Fund und erklärt, warum der Pentester das Passwort für `lisa` kennen könnte. Dieses Passwort (`1154p455!1`) sollte, wie oben erwähnt, für `sudo -l` verwendet werden. Solche Funde sind typisch für CTF-Szenarien, können aber auch in realen Umgebungen vorkommen, wenn sensible Informationen unachtsam in Dateien eingebettet werden.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Das Passwort `1154p455!1` sofort bei `sudo -l` oder anderen Passwortabfragen für `lisa` testen.<br>
+                **Empfehlung (Admin):** Sensibilisierung der Benutzer und Entwickler, keine Passwörter oder sensiblen Daten in Konfigurationsdateien, Skripten oder Dokumenten zu speichern. Regelmäßige Scans nach solchen Informationen durchführen. Druckdaten und temporäre Dateien sicher handhaben und löschen.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">lisa@printer:/opt/logs$ <span class="command">cd ..</span></div>
+                    <div class="prompt">lisa@printer:/opt$ <span class="command">ln -s /root/.ssh/id_rsa root_log</span></div>
+                    <!-- Fehlender Teil im Original-Log -->
+                    <div class="prompt">lisa@printer:/opt/logs$ <span class="command">cd ..</span></div>
+                    <div class="prompt">lisa@printer:/opt$ <span class="command">ln -s /root/.ssh/id_rsa log_file</span></div>
+                    <div class="prompt">lisa@printer:/opt$ <span class="command">logger "fatal error !"</span></div>
+                    <div class="prompt">lisa@printer:/opt$ <span class="command">ls -la</span></div>
+                    <pre>
+total 12
+drwxr-xrwx  3 root root 4096 Apr  9 02:56 .
+drwxr-xr-x 18 root root 4096 Jan  7 21:19 ..
+lrwxrwxrwx  1 lisa lisa   17 Apr  9 02:56 <span class="command">log_file -> /root/.ssh/id_rsa</span>
+drwxr-xr-x  2 root root 4096 Apr  9 02:56 logs
+lrwxrwxrwx  1 lisa lisa   17 Apr  9 02:42 <span class="command">root_log -> /root/.ssh/id_rsa</span>
+                    </pre>
+                    <pre><span class="password">
+Broadcast message from root@printer (somewhere) (Sun Apr  9 02:57:01 2023):
+
+Lisa, URGENT! Come quickly to fix the problem!
+                    </span></pre>
+                 </div>
+             </div>
+              <p class="analysis">
+                 **Analyse:** Diese Befehlssequenz enthüllt den Privilege-Escalation-Vektor.
+                 1.  Der Benutzer `lisa` wechselt in das Verzeichnis `/opt`.
+                 2.  Es werden zwei symbolische Links (`ln -s`) erstellt: `root_log` und `log_file`. Beide zeigen auf die Datei `/root/.ssh/id_rsa`, den privaten SSH-Schlüssel des root-Benutzers. Lisa kann diese Links erstellen, da sie offenbar Schreibrechte im Verzeichnis `/opt` hat (ersichtlich an den `drwxr-xrwx`-Berechtigungen von `/opt` in der `ls -la`-Ausgabe, das `w` für `others` ist kritisch).
+                 3.  Der Befehl `logger "fatal error !"` wird ausgeführt. `logger` ist ein Werkzeug, um Nachrichten an den Systemprotokollierungsdienst (syslog) zu senden.
+                 4.  `ls -la` zeigt die erstellten Symlinks im `/opt`-Verzeichnis.
+                 5.  Eine Broadcast-Nachricht erscheint kurz darauf, gesendet vom `root`-Benutzer, die Lisa auffordert, ein Problem zu beheben. Dies deutet stark darauf hin, dass der `logger`-Befehl einen Mechanismus ausgelöst hat, der als `root` läuft.
+             </p>
+             <p class="evaluation">
+                 **Bewertung:** Dies ist ein cleverer Exploit einer Fehlkonfiguration oder eines benutzerdefinierten Skripts. Offenbar überwacht ein Prozess (als `root` laufend) die Systemlogs auf bestimmte Nachrichten (vielleicht "fatal error"). Wenn eine solche Nachricht erkannt wird, führt dieser Prozess eine Aktion aus, die mit Dateien im `/opt`-Verzeichnis oder dessen Unterverzeichnissen interagiert. Indem `lisa` einen Symlink erstellt, der auf den privaten SSH-Schlüssel von `root` zeigt, und dann den Trigger (`logger "fatal error !"`) auslöst, kann sie den `root`-Prozess dazu bringen, mit diesem Schlüssel zu interagieren – wahrscheinlich, indem er ihn in ein Archiv packt oder kopiert. Die unsicheren Berechtigungen von `/opt` (Schreibzugriff für alle) ermöglichen das Erstellen des Symlinks.
+             </p>
+              <p class="recommendation">
+                 **Empfehlung (Pentester):** Den Mechanismus weiter untersuchen. Was genau passiert nach dem `logger`-Befehl? Wohin wird die Datei (oder der Inhalt des Symlinks) kopiert oder archiviert? Der nächste Schritt im Log (Starten eines HTTP-Servers im Unterverzeichnis `logs`) deutet darauf hin, dass das Ergebnis dort zu finden ist.<br>
+                 **Empfehlung (Admin):**
+                 1.  **Berechtigungen korrigieren:** Das Verzeichnis `/opt` sollte keine Schreibrechte für alle (`others`) haben. Typischerweise `755` (rwxr-xr-x).
+                 2.  **Automatisierte Skripte prüfen:** Das Skript oder den Prozess identifizieren, der auf `logger`-Nachrichten reagiert und als `root` läuft. Dieses Skript ist unsicher, da es offenbar Aktionen im `/opt`-Verzeichnis basierend auf Benutzereingaben (Log-Nachrichten und Symlinks) durchführt. Solche Mechanismen sollten robust gegen Symlink-Angriffe und Manipulationen sein oder idealerweise vermieden werden. Privilegien sollten so spät wie möglich und nur für die absolut notwendigen Operationen angenommen werden. Niemals blind Dateien aus potenziell benutzerkontrollierten Pfaden verarbeiten.
+                 3.  **Logging überprüfen:** Den Zweck des `logger`-Triggers verstehen und ggf. entfernen oder sicher implementieren.
+             </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <!-- Fehlendes logger-Kommando und python-Start -->
+                    <div class="prompt">lisa@printer:/opt$ <span class="command">cd logs/</span></div>
+                    <div class="prompt">lisa@printer:/opt/logs$ <span class="command">logger "fatal error !"</span></div>
+                    <div class="prompt">lisa@printer:/opt/logs$ <span class="command">python3 -m http.server 8005</span></div>
+                    <pre>
+Serving HTTP on 0.0.0.0 port 8005 (http://0.0.0.0:8005/) ...
+<span class="password">192.168.2.114 - - [09/Apr/2023 02:58:16] "GET /journal.zip HTTP/1.1" 200 -</span>
+                    </pre>
+                     <pre><span class="password">
+Broadcast message from root@printer (somewhere) (Sun Apr  9 02:59:01 2023):
+
+Lisa, URGENT! Come quickly to fix the problem!
+                    </span></pre>
+                </div>
+            </div>
+            <p class="analysis">
+                **Analyse:**
+                1.  Lisa wechselt in das Unterverzeichnis `/opt/logs`.
+                2.  Sie löst den Mechanismus erneut mit `logger "fatal error !"` aus.
+                3.  Sie startet einen Python-HTTP-Server auf Port `8005` im Verzeichnis `/opt/logs`.
+                4.  Der HTTP-Server protokolliert eine eingehende GET-Anfrage von der Angreifer-IP (`192.168.2.114`) für die Datei `journal.zip`. Die Anfrage war erfolgreich (Statuscode `200`).
+                5.  Erneut erscheint die Broadcast-Nachricht von `root`.
+            </p>
+            <p class="evaluation">
+                **Bewertung:** Jetzt wird klarer, was passiert: Der durch `logger` ausgelöste `root`-Prozess erstellt offenbar eine ZIP-Datei namens `journal.zip` im Verzeichnis `/opt/logs`. Diese ZIP-Datei enthält wahrscheinlich den Inhalt der Datei, auf die der Symlink (`log_file` oder `root_log`) gezeigt hat – also den privaten SSH-Schlüssel von `root`. Indem Lisa den HTTP-Server in `/opt/logs` startet, kann der Angreifer diese `journal.zip`-Datei bequem herunterladen. Das wiederholte Auslösen mit `logger` und das erneute Erscheinen der Broadcast-Nachricht bestätigen diesen Trigger-Mechanismus.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Die Datei `journal.zip` sofort von der Angreifer-Maschine herunterladen (`wget http://192.168.2.125:8005/journal.zip`). Die ZIP-Datei untersuchen und den privaten SSH-Schlüssel extrahieren.<br>
+                **Empfehlung (Admin):** Wie zuvor: Den automatisierten `root`-Prozess finden und dringend beheben/absichern. Dieser Prozess legt sensible Daten (hier den root-SSH-Schlüssel) in einem potenziell von einem unprivilegierten Benutzer lesbaren Verzeichnis (`/opt/logs`) ab und verwendet dabei einen unsicheren Trigger. Das ist eine gravierende Sicherheitslücke.
+            </p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">wget http://192.168.2.125:8005/journal.zip</span></div>
+                     <pre>
+--2023-04-09 02:47:02--  http://192.168.2.125:8005/journal.zip
+Verbindungsaufbau zu 192.168.2.125:8005 … verbunden.
+HTTP-Anforderung gesendet, auf Antwort wird gewartet … <span class="password">200 OK</span>
+Länge: 284479 (278K) [application/zip]
+Wird in journal.zip gespeichert.
+
+journal.zip             100%[===================================>] 277,81K  --.-KB/s    in 0,001s
+
+<span class="password">2023-04-09 02:47:02 (373 MB/s) - journal.zip gespeichert [284479/284479]</span>
+                     </pre>
+                 </div>
+             </div>
+             <p class="analysis">
+                 **Analyse:** Von der lokalen Angreifer-Maschine aus wird `wget` verwendet, um die Datei `journal.zip` vom Python-HTTP-Server herunterzuladen, der auf dem Zielsystem als `lisa` läuft. Der Download ist erfolgreich (HTTP 200 OK).
+             </p>
+             <p class="evaluation">
+                 **Bewertung:** Die potenziell den root-SSH-Schlüssel enthaltende ZIP-Datei wurde erfolgreich auf die Angreifer-Maschine übertragen.
+             </p>
+              <p class="recommendation">
+                 **Empfehlung (Pentester):** Die heruntergeladene Datei `journal.zip` im nächsten Schritt entpacken.<br>
+                 **Empfehlung (Admin):** Egress-Filtering hätte diesen Download verhindern können, wenn ausgehende Verbindungen vom Server auf Port 8005 nicht erlaubt wären. Das Hauptproblem bleibt jedoch der unsichere Prozess auf dem Server selbst.
+             </p>
+
+             <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">unzip journal.zip</span></div>
+                     <pre>
+Archive:  journal.zip
+[journal.zip] d00049-001 password: <span class="password"><Passwort benötigt?></span>
+  inflating: d00049-001
+  inflating: d00050-001
+                     </pre>
+                     <pre>
+<span class="password">-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAABlwAAAAdzc2gtcn
+NhAAAAAwEAAQAAAYEAv/7imsga0zuLb2JwVobQ63bUd6wveWRS1Axa+YjhBY3VIBTu4UW
+Pe32HLm5jhwrec6ujCXxlq2ZrNXLvRTSQPzmEE5JxElR91JPXAmww7E34iWywll1Y2Br
+[...]
+U6gfqDWxXISXpAnJWdNPRD+30nWbHr1ttbjkU8lnAAAFiN7lGVbe5RlWAAAAB3NzaC1yc2
+[...]
+913trazGIjB2PILmBi9FBkm4aw8fN142WqvcPoClcK8G2i0WqaumfqT9LoAicWbtmoN
+QTVrZgcBNsoB/FAAAADHJvb3RAcHJpbnRlcgECAwQFBg
+-----END OPENSSH PRIVATE KEY-----</span>
+                     </pre>
+                 </div>
+             </div>
+              <p class="analysis">
+                 **Analyse:** Der Befehl `unzip journal.zip` wird auf der Angreifer-Maschine ausgeführt.
+                 *   `unzip` meldet zunächst, dass es ein Passwort für die Datei `d00049-001` innerhalb des Archivs benötigt (`[journal.zip] d00049-001 password:`). Es ist unklar, ob hier ein Passwort eingegeben wurde oder ob `unzip` weitermachte. Das Log zeigt dann `inflating` für zwei Dateien (`d00049-001`, `d00050-001`).
+                 *   Unmittelbar danach wird der Inhalt eines privaten SSH-Schlüssels im OpenSSH-Format angezeigt. Es ist wahrscheinlich, dass eine der entpackten Dateien (oder beide?) diesen Schlüssel enthielt. Der Kommentar am Ende (`root@printer`) identifiziert ihn als Schlüssel für den `root`-Benutzer auf dem Zielsystem `printer`.
+             </p>
+             <p class="evaluation">
+                 **Bewertung:** Volltreffer! Der private SSH-Schlüssel des `root`-Benutzers wurde erfolgreich durch Ausnutzung des `logger`-Mechanismus und des Symlink-Angriffs extrahiert. Auch wenn das ZIP-Archiv passwortgeschützt zu sein schien (vielleicht mit dem Passwort von Lisa? `1154p455!1`), konnte der Schlüssel offenbar extrahiert werden. Dies ist der Schlüssel zur vollständigen Kompromittierung des Systems.
+             </p>
+              <p class="recommendation">
+                 **Empfehlung (Pentester):**
+                 1.  Den extrahierten privaten SSH-Schlüssel in eine Datei speichern (z.B. `root_ssh`).
+                 2.  Die Berechtigungen der Schlüsseldatei auf `600` setzen (`chmod 600 root_ssh`), da SSH dies erfordert.
+                 3.  Versuchen, sich als `root` über SSH mit diesem Schlüssel anzumelden (`ssh root@printer.hmv -i root_ssh`).<br>
+                 **Empfehlung (Admin):** Das ist der "Worst Case". Der private SSH-Schlüssel von root ist kompromittiert.
+                 1.  Sofort den Zugriff über diesen Schlüssel sperren (z.B. durch Entfernen des zugehörigen öffentlichen Schlüssels aus `/root/.ssh/authorized_keys` auf dem Server).
+                 2.  Den kompromittierten privaten Schlüssel als ungültig betrachten und niemals wiederverwenden.
+                 3.  Das System gründlich auf weitere Kompromittierungen, Backdoors und Persistenzmechanismen untersuchen.
+                 4.  Die Ursache (unsicherer `logger`-Mechanismus, unsichere `/opt`-Berechtigungen) beheben.
+                 5.  Passwörter aller Benutzer (insbesondere `root` und `lisa`) ändern.
+             </p>
+
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">vi root_ssh</span></div>
+                    <!-- Keine Ausgabe, Speichern des Keys in der Datei -->
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Der extrahierte private SSH-Schlüssel von `root` wird mit dem `vi`-Editor in eine lokale Datei namens `root_ssh` gespeichert.
+            </p>
+             <p class="evaluation">
+                **Bewertung:** Notwendiger Schritt, um den Schlüssel für den SSH-Befehl verwendbar zu machen.
+            </p>
+
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">chmod 600 root_ssh</span></div>
+                     <!-- Keine Ausgabe erwartet -->
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Der Befehl `chmod 600 root_ssh` ändert die Dateiberechtigungen der privaten Schlüsseldatei `root_ssh`. `600` bedeutet Lese- und Schreibzugriff nur für den Eigentümer (hier `root` auf der lokalen Maschine) und keine Rechte für andere.
+            </p>
+             <p class="evaluation">
+                **Bewertung:** Dies ist eine zwingende Voraussetzung für die Verwendung von privaten SSH-Schlüsseln. Der SSH-Client weigert sich aus Sicherheitsgründen, Schlüssel zu verwenden, die für andere Benutzer lesbar sind.
+            </p>
+             <p class="recommendation">
+                **Empfehlung (Pentester):** Korrekter und notwendiger Schritt.<br>
+                **Empfehlung (Admin):** Best Practice für die Handhabung privater Schlüssel.
+            </p>
+
+            <div class="code-block">
+                <div class="terminal">
+                    <div class="prompt">┌──(root㉿cyber)-[~]
+└─# <span class="command">ssh root@printer.hmv -i root_ssh</span></div>
+                    <pre>
+Linux printer 5.10.0-20-amd64 #1 SMP Debian 5.10.158-2 (2022-12-13) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Jan  8 12:27:40 2023 from ::1
+<span class="prompt">root@printer:~#</span>
+                    </pre>
+                </div>
+            </div>
+             <p class="analysis">
+                **Analyse:** Der Pentester versucht nun, sich per SSH als `root`-Benutzer auf dem Zielsystem `printer.hmv` anzumelden und verwendet dabei den gerade extrahierten und vorbereiteten privaten Schlüssel (`-i root_ssh`). Es wird keine Passphrase abgefragt, was bedeutet, dass der private Schlüssel von `root` selbst nicht passwortgeschützt war (im Gegensatz zu dem von `lisa` verwendeten Angreifer-Schlüssel). Die Verbindung wird erfolgreich hergestellt, und der Pentester erhält eine Shell als `root`.
+            </p>
+             <p class="evaluation">
+                **Bewertung:** Fantastisch, das ist der vollständige Systemkompromittierung! Durch die Verkettung der NFS-Schwachstelle für den Initial Access als `lisa` und die Ausnutzung des unsicheren `logger`-Mechanismus zur Extraktion des `root`-SSH-Schlüssels konnte der Pentester uneingeschränkten Root-Zugriff auf das Zielsystem erlangen. Privilege Escalation war erfolgreich.
+            </p>
+              <p class="recommendation">
+                 **Empfehlung (Pentester):** Root-Zugriff bestätigt. Nun die Root-Flag suchen (`/root/root.txt`). Das System auf interessante Konfigurationen, Daten oder Persistenzmechanismen untersuchen. Ggf. Hashes aus `/etc/shadow` extrahieren. Den ausgenutzten Mechanismus genauer untersuchen (welches Skript reagiert auf `logger`?).<br>
+                 **Empfehlung (Admin):** Sofortmaßnahmen wie unter "unzip" beschrieben ergreifen. Zusätzlich untersuchen, warum der private SSH-Schlüssel von `root` nicht passwortgeschützt war. Private Schlüssel von kritischen Accounts sollten immer durch eine starke Passphrase geschützt sein. Den SSH-Zugriff für `root` über Schlüssel ggf. komplett deaktivieren (`PermitRootLogin prohibit-password` oder `PermitRootLogin no` in `sshd_config`) und stattdessen über `sudo` von einem unprivilegierten Benutzer aus arbeiten.
+             </p>
+
+            <div class="code-block">
+                 <div class="terminal">
+                     <div class="prompt">root@printer:~# <span class="command">cat root.txt</span></div>
+                     <pre>
+<span class="password">ba72c777ca3351ac5a837e0cd8efa0ed</span>
+                     </pre>
+                 </div>
+             </div>
+              <p class="analysis">
+                 **Analyse:** Als `root` wird die Datei `root.txt` im Home-Verzeichnis (`/root/`) gelesen.
+             </p>
+             <p class="evaluation">
+                 **Bewertung:** Die Root-Flag wurde erfolgreich ausgelesen. Das Ziel des Penetrationstests (im CTF-Sinne) ist erreicht.
+             </p>
+             <p class="recommendation">
+                 **Empfehlung (Pentester):** Root-Flag dokumentieren.<br>
+                 **Empfehlung (Admin):** Neben den Flags selbst ist der Weg zur Erlangung dieser Flags entscheidend für die Behebung der Sicherheitslücken.
+             </p>
+
+        </section>
+
+        <!-- Angepasster Flags-Abschnitt -->
+        <section id="flags">
+             <div class="flag-container">
+                 <h2 class="flag-heading">Flags</h2>
+                 <div class="flag-entry">
+                     <div class="flag-command">cat /home/lisa/user.txt</div> <!-- Pfad aus find übernommen -->
+                     <div class="flag-value"><span class="password">f590b7e83e4c8cd11d06849f9c1a8f6d</span></div>
+                 </div>
+                 <div class="flag-entry">
+                     <div class="flag-command">cat /root/root.txt</div> <!-- Standard-Pfad für root -->
+                     <div class="flag-value"><span class="password">ba72c777ca3351ac5a837e0cd8efa0ed</span></div>
+                 </div>
+             </div>
+         </section>
+
+ 
+
+    <footer class="footer">
+        <p>DarkSpirit - Cyber Security Reports</p>
+        <!-- Datum aus den Logs extrahiert -->
+        <p>Berichtsdatum: 9. April 2023</p>
+    </footer>
+</body>
+</html>
